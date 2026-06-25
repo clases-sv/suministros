@@ -138,7 +138,7 @@ footer a{color:var(--blue)}
       <div class="corridor"><span class="dot"></span>El Salvador <span class="arr">&rarr;</span> Venezuela <span class="dot"></span> Misión Humanitaria</div>
     </div>
     <div class="status-area">
-      <span class="verbadge" title="3 pestañas · médicos REQ/PROC en sub-vista">v9 · PROC esperado/recibido</span>
+      <span class="verbadge" title="3 pestañas · médicos REQ/PROC en sub-vista">v10 · lectura robusta</span>
       <span class="pill loading" id="syncPill"><span class="ring"></span><span id="syncText">Conectando…</span></span>
       <button class="btn" id="refreshBtn">Actualizar</button>
     </div>
@@ -320,11 +320,22 @@ function parseCSV(text){
 
 // Map a raw CSV grid into {headers, records} using the tab's canonical headers
 function gridToRecords(grid, cfg, canonHeaders){
-  // find header row by markers
+  // 1) intento por marcadores
   let hIdx=-1;
   for(let r=0;r<grid.length;r++){
     const cells = grid[r].map(norm);
     if(cfg.headerMarkers.every(m=>cells.some(c=>c.includes(m)))){ hIdx=r; break; }
+  }
+  // 2) respaldo: fila con mejor coincidencia contra los encabezados canónicos
+  if(hIdx<0){
+    let best=1;
+    for(let r=0;r<grid.length;r++){
+      const cells = grid[r].map(norm);
+      let score=0;
+      canonHeaders.forEach(h=>{ const nh=norm(h);
+        if(nh && cells.some(c=>c.length>1 && (c===nh || c.includes(nh) || nh.includes(c)))) score++; });
+      if(score>best){ best=score; hIdx=r; }
+    }
   }
   if(hIdx<0) throw new Error("No se encontró la fila de encabezados");
   const rawHead = grid[hIdx].map(norm);
@@ -364,14 +375,14 @@ async function fetchTab(key){
 
 async function refresh(manual){
   setSync("loading","Actualizando…");
-  let okCount=0, failNote="";
+  let okCount=0, failNote="", failedKeys=[];
   await Promise.all(Object.keys(TABS).map(async key=>{
     try{
       const r = await fetchTab(key);
       DATA[key]=prepData(key, r); META[key]={live:true,time:new Date()};
       okCount++;
     }catch(e){
-      failNote = e.message || "error";
+      failNote = e.message || "error"; failedKeys.push(TABS[key].label||key);
       if(!DATA[key]){ DATA[key]=prepData(key, SNAPSHOT[key]); META[key]={live:false,time:null}; }
     }
   }));
@@ -380,7 +391,7 @@ async function refresh(manual){
     hideBanner();
   } else if(okCount>0){
     setSync("warn","Parcial · "+timeStr(new Date()));
-    showBanner("Algunas pestañas no se pudieron leer en vivo ("+failNote+"). Se muestran los últimos datos disponibles.");
+    showBanner("No se pudieron leer en vivo: "+failedKeys.join(", ")+" ("+failNote+"). Se muestran los últimos datos disponibles.");
   } else {
     setSync("warn","Respaldo · "+SNAPSHOT.generated);
     showBanner("No se pudo leer el Sheet en vivo ("+failNote+"). Mostrando el respaldo del "+SNAPSHOT.generated+". Verifica que el documento esté compartido como «Cualquier persona con el enlace: Lector».");
