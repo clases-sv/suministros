@@ -98,9 +98,10 @@ header.top{background:var(--deep); color:#EAF2F9; }
 
 /* Table */
 .tablecard{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
-.scroll{overflow-x:auto}
+.scroll{overflow:auto; max-height:62vh}
+.scroll{scrollbar-gutter:stable}
 table{border-collapse:collapse;width:100%;font-size:13px}
-thead th{position:sticky;top:0;background:#F4F7FA;border-bottom:1px solid var(--line);text-align:left;padding:11px 12px;font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;color:var(--deep);white-space:nowrap;cursor:pointer;user-select:none}
+thead th{position:sticky;top:0;z-index:2;background:#F4F7FA;border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--line);text-align:left;padding:11px 12px;font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;color:var(--deep);white-space:nowrap;cursor:pointer;user-select:none}
 thead th:hover{background:#ECF1F6}
 thead th .ind{color:var(--blue);font-size:10px;margin-left:4px}
 thead th.n, td.n{text-align:right}
@@ -133,7 +134,7 @@ footer a{color:var(--blue)}
       <div class="corridor"><span class="dot"></span>El Salvador <span class="arr">&rarr;</span> Venezuela <span class="dot"></span> Misión Humanitaria</div>
     </div>
     <div class="status-area">
-      <span class="verbadge" title="4 pestañas · estatus por tipo en Herramientas">v5 · médicos consolidado</span>
+      <span class="verbadge" title="4 pestañas · estatus por tipo en Herramientas">v6 · scroll en tablas</span>
       <span class="pill loading" id="syncPill"><span class="ring"></span><span id="syncText">Conectando…</span></span>
       <button class="btn" id="refreshBtn">Actualizar</button>
     </div>
