@@ -61,6 +61,22 @@ header.top{background:var(--deep); color:#EAF2F9; }
 .card.alert{border-left-style:dashed;border-left-color:var(--red)}
 .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
 
+/* Quick box (3 categorías) */
+.quickwrap{margin-bottom:14px}
+.eyebrow{font-family:"Archivo",sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
+.quickbox{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.qseg{padding:14px 16px;cursor:pointer;border-left:1px solid var(--line2);position:relative;transition:background .1s ease}
+.qseg:first-child{border-left:0}
+.qseg:hover{background:#F6F9FB}
+.qseg.active{background:#F2F7FB}
+.qseg .top{display:flex;align-items:center;gap:8px}
+.qseg .bar{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+.qseg .lbl{font-family:"Archivo",sans-serif;font-weight:700;font-size:14px}
+.qseg .qv{font-family:"Archivo",sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;margin-top:6px;line-height:1}
+.qseg .qsub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.qseg.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:currentColor}
+@media (max-width:560px){.quickbox{grid-template-columns:1fr}.qseg{border-left:0;border-top:1px solid var(--line2)}.qseg:first-child{border-top:0}}
+
 /* Toolbar */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .search{flex:1 1 240px;min-width:200px;position:relative}
@@ -129,6 +145,7 @@ footer a{color:var(--blue)}
   </div>
 
   <div class="banner" id="banner"></div>
+  <div class="quickwrap" id="quickwrap"><div class="quickbox" id="quickbox"></div></div>
   <div class="cards" id="cards"></div>
 
   <div class="toolbar" id="toolbar"></div>
@@ -171,10 +188,10 @@ const TABS = {
     searchFields: ["Ítem / descripción","Solicitante"],
     dropdowns: [
       {field:"Solicitante", label:"Solicitante"},
-      {field:"Mejor proveedor", label:"Mejor proveedor"},
-      {field:"ESTATUS", label:"Estatus"}
+      {field:"Mejor proveedor", label:"Mejor proveedor", include:["FREUND","VIDRI","EPA"]}
     ],
-    statusOrder: ["CUBIERTO","30% exceso","FALTA","FALTA 50%","FALTA 80%"]
+    statusOrder: ["CUBIERTO","30% exceso","FALTA","FALTA 50%","FALTA 80%"],
+    groups: { "Cubierto":["CUBIERTO","30% exceso"], "Falta":["FALTA","FALTA 50%","FALTA 80%"] }
   },
   primera: {
     label: "Primera necesidad",
@@ -187,8 +204,7 @@ const TABS = {
     searchFields: ["Artículo","Categoría","Observaciones"],
     dropdowns: [
       {field:"Categoría", label:"Categoría"},
-      {field:"Clasificación de transporte", label:"Transporte"},
-      {field:"Estatus", label:"Estatus"}
+      {field:"Clasificación de transporte", label:"Transporte"}
     ]
   }
 };
@@ -196,7 +212,8 @@ const TABS = {
 let DATA = { herramientas:null, primera:null };
 let META = { herramientas:{live:false,time:null}, primera:{live:false,time:null} };
 let current = "herramientas";
-let filters = {}; // {field:value}
+let filters = {}; // {field:value} single-value filters
+let statusSet = new Set(); // multi-select on the tab's statusField
 let search = "";
 let sortState = { field:null, dir:1 };
 
@@ -314,6 +331,7 @@ function activeRecords(){
   const cfg=TABS[current]; const recs=(DATA[current]||SNAPSHOT[current]).records;
   let out = recs.filter(r=>{
     for(const f in filters){ if(filters[f]!=null && String(r[f]).trim()!==filters[f]) return false; }
+    if(statusSet.size>0 && !statusSet.has(String(r[cfg.statusField]).trim())) return false;
     if(search){
       const q=norm(search);
       const hit = cfg.searchFields.some(f=>norm(r[f]).includes(q));
@@ -333,54 +351,91 @@ function activeRecords(){
 }
 
 // ---------- rendering ----------
-function render(){ renderCards(); renderToolbar(); renderChips(); renderTable(); renderFooter(); }
+function render(){ renderQuickBox(); renderCards(); renderToolbar(); renderChips(); renderTable(); renderFooter(); }
 
 function countBy(recs, field, value){ return recs.filter(r=>String(r[field]).trim()===value).length; }
+function countIn(recs, field, values){ const s=new Set(values); return recs.filter(r=>s.has(String(r[field]).trim())).length; }
 function sumBy(recs, field){ return recs.reduce((s,r)=>s+(toNum(r[field])||0),0); }
+function setEquals(a, arr){ return a.size===arr.length && arr.every(v=>a.has(v)); }
+
+// Quick box: only for herramientas (Cubierto / Falta / Sin proveedor)
+function renderQuickBox(){
+  const wrap=document.getElementById("quickwrap");
+  const box=document.getElementById("quickbox");
+  if(current!=="herramientas"){ wrap.style.display="none"; box.innerHTML=""; return; }
+  wrap.style.display="";
+  const all=(DATA.herramientas||SNAPSHOT.herramientas).records;
+  const g=TABS.herramientas.groups;
+  const segs=[
+    {lbl:"Cubierto", color:"#0F7A4D", n:countIn(all,"ESTATUS",g.Cubierto), sub:"cubierto + exceso", group:g.Cubierto},
+    {lbl:"Falta", color:"#B42318", n:countIn(all,"ESTATUS",g.Falta), sub:"faltante total", group:g.Falta},
+    {lbl:"Sin proveedor", color:"#7F1D1D", n:countBy(all,"Mejor proveedor","Ninguno"), sub:"ningún cotizante", prov:"Ninguno"}
+  ];
+  box.innerHTML="";
+  segs.forEach(s=>{
+    const d=document.createElement("div"); d.className="qseg"; d.style.color=s.color;
+    let active=false;
+    if(s.group) active=setEquals(statusSet, s.group);
+    else active=filters["Mejor proveedor"]==="Ninguno";
+    if(active) d.classList.add("active");
+    d.innerHTML='<div class="top"><span class="bar" style="background:'+s.color+'"></span><span class="lbl" style="color:var(--ink)">'+s.lbl+'</span></div>'+
+                '<div class="qv num" style="color:'+s.color+'">'+s.n+'</div><div class="qsub">'+s.sub+'</div>';
+    d.onclick=()=>{
+      if(s.group){
+        if(setEquals(statusSet, s.group)) statusSet.clear();
+        else statusSet=new Set(s.group);
+      } else {
+        if(filters["Mejor proveedor"]==="Ninguno") delete filters["Mejor proveedor"];
+        else filters["Mejor proveedor"]="Ninguno";
+      }
+      render();
+    };
+    box.appendChild(d);
+  });
+}
 
 function renderCards(){
   const el=document.getElementById("cards"); el.innerHTML="";
+  const cfg=TABS[current];
   const all=(DATA[current]||SNAPSHOT[current]).records;
   const cards=[];
   if(current==="herramientas"){
-    cards.push({k:"Ítems totales", v:all.length, sub:"en seguimiento", color:"#1F6FB2", filter:null});
+    cards.push({k:"Ítems totales", v:all.length, sub:"en seguimiento", color:"#1F6FB2", reset:true});
     TABS.herramientas.statusOrder.forEach(s=>{
-      cards.push({k:s, v:countBy(all,"ESTATUS",s), sub:"", color:STATUS_COLORS[s], swatch:true, filter:{field:"ESTATUS",value:s}});
+      cards.push({k:s, v:countBy(all,"ESTATUS",s), sub:"", color:STATUS_COLORS[s], swatch:true, status:s});
     });
-    cards.push({k:"Sin proveedor", v:countBy(all,"Mejor proveedor","Ninguno"), sub:"ningún cotizante", color:"#B42318", alert:true, filter:{field:"Mejor proveedor",value:"Ninguno"}});
   } else {
-    cards.push({k:"Artículos", v:all.length, sub:"en la lista", color:"#1F6FB2", filter:null});
+    cards.push({k:"Artículos", v:all.length, sub:"en la lista", color:"#1F6FB2", reset:true});
     cards.push({k:"Unidades totales", v:fmt(sumBy(all,"Cantidad")), sub:"suma de cantidades", color:"#143C5B", stat:true});
     cards.push({k:"Peso estimado", v:fmt(sumBy(all,"Peso total estimado (kg)"))+" kg", sub:"≈ "+(sumBy(all,"Peso total estimado (kg)")/1000).toFixed(1)+" t", color:"#143C5B", stat:true});
-    cards.push({k:"En despacho", v:countBy(all,"Estatus","Despacho"), sub:"", color:STATUS_COLORS["Despacho"], swatch:true, filter:{field:"Estatus",value:"Despacho"}});
-    cards.push({k:"Pendiente", v:countBy(all,"Estatus","Pendiente"), sub:"", color:STATUS_COLORS["Pendiente"], swatch:true, filter:{field:"Estatus",value:"Pendiente"}});
+    cards.push({k:"En despacho", v:countBy(all,"Estatus","Despacho"), sub:"", color:STATUS_COLORS["Despacho"], swatch:true, status:"Despacho"});
+    cards.push({k:"Pendiente", v:countBy(all,"Estatus","Pendiente"), sub:"", color:STATUS_COLORS["Pendiente"], swatch:true, status:"Pendiente"});
   }
   cards.forEach(c=>{
     const d=document.createElement("div");
-    d.className="card"+(c.filter?" clickable":"")+(c.alert?" alert":"");
+    const clickable = c.status!=null || c.reset;
+    d.className="card"+(clickable?" clickable":"");
     d.style.borderLeftColor=c.color;
-    const isActive = c.filter && filters[c.filter.field]===c.filter.value;
-    const isTotalActive = c.filter===null && Object.keys(filters).length===0 && !c.stat && current==="herramientas" && c.k==="Ítems totales";
-    if(isActive) d.classList.add("active");
+    if(c.status!=null && statusSet.has(c.status)) d.classList.add("active");
     const sw = c.swatch?'<span class="swatch" style="background:'+c.color+'"></span>':"";
     d.innerHTML='<div class="k">'+sw+c.k+'</div><div class="v num">'+c.v+'</div>'+(c.sub?'<div class="sub">'+c.sub+'</div>':"");
-    if(c.filter){
+    if(c.status!=null){
       d.onclick=()=>{
-        if(filters[c.filter.field]===c.filter.value) delete filters[c.filter.field];
-        else filters[c.filter.field]=c.filter.value;
+        if(statusSet.has(c.status)) statusSet.delete(c.status);
+        else statusSet.add(c.status);
         render();
       };
-    } else if(c.filter===null && !c.stat){
-      d.classList.add("clickable");
-      d.onclick=()=>{ filters={}; search=""; render(); };
+    } else if(c.reset){
+      d.onclick=()=>{ filters={}; statusSet.clear(); search=""; render(); };
     }
     el.appendChild(d);
   });
 }
 
-function uniqueVals(recs, field){
+function uniqueVals(recs, field, include){
   const set=new Set();
   recs.forEach(r=>{ const v=String(r[field]).trim(); if(v&&v!=="—"&&v!=="None") set.add(v); });
+  if(include) include.forEach(v=>set.add(v));
   return [...set].sort((a,b)=>a.localeCompare(b,"es"));
 }
 
@@ -396,18 +451,27 @@ function renderToolbar(){
   cfg.dropdowns.forEach(dd=>{
     const w=document.createElement("div"); w.className="sel";
     const sel=document.createElement("select");
-    const opts=uniqueVals(all,dd.field);
+    const opts=uniqueVals(all,dd.field,dd.include);
     sel.innerHTML='<option value="">'+dd.label+': todos</option>'+opts.map(o=>'<option'+(filters[dd.field]===o?" selected":"")+'>'+o+'</option>').join("");
     sel.onchange=e=>{ const v=e.target.value; if(v) filters[dd.field]=v; else delete filters[dd.field]; render(); };
     w.appendChild(sel); tb.appendChild(w);
   });
   const c=document.createElement("button"); c.className="clear"; c.textContent="Limpiar filtros";
-  c.onclick=()=>{ filters={}; search=""; sortState={field:null,dir:1}; render(); };
+  c.onclick=()=>{ filters={}; statusSet.clear(); search=""; sortState={field:null,dir:1}; render(); };
   tb.appendChild(c);
 }
 
 function renderChips(){
   const el=document.getElementById("chips"); el.innerHTML="";
+  const cfg=TABS[current];
+  [...statusSet].forEach(s=>{
+    const col=STATUS_COLORS[s]||"#5C6B7A";
+    const chip=document.createElement("span"); chip.className="chip";
+    chip.innerHTML='<span><span class="swatch" style="background:'+col+'"></span> <b>'+s+'</b></span>';
+    const x=document.createElement("button"); x.textContent="×"; x.title="Quitar";
+    x.onclick=()=>{ statusSet.delete(s); render(); };
+    chip.appendChild(x); el.appendChild(chip);
+  });
   Object.keys(filters).forEach(f=>{
     const chip=document.createElement("span"); chip.className="chip";
     chip.innerHTML='<span>'+f+': <b>'+filters[f]+'</b></span>';
@@ -482,7 +546,7 @@ document.querySelectorAll(".tab").forEach(t=>{
   t.onclick=()=>{
     document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected","false"));
     t.setAttribute("aria-selected","true");
-    current=t.dataset.tab; filters={}; search=""; sortState={field:null,dir:1};
+    current=t.dataset.tab; filters={}; statusSet.clear(); search=""; sortState={field:null,dir:1};
     render();
   };
 });
