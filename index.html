@@ -42,6 +42,7 @@ header.top{background:var(--deep); color:#EAF2F9; }
 .btn{font-family:"Inter",sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#EAF2F9;padding:7px 13px;border-radius:8px}
 .btn:hover{background:rgba(255,255,255,.16)}
 .btn:active{transform:translateY(1px)}
+.verbadge{display:inline-flex;align-items:center;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:11px;letter-spacing:.02em;color:#BFE0F2;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);padding:6px 10px;border-radius:999px}
 
 /* Tabs */
 .tabs{display:flex; gap:4px; margin:18px 0 16px; background:var(--panel); padding:5px; border-radius:12px; border:1px solid var(--line); width:max-content; max-width:100%; box-shadow:var(--shadow)}
@@ -132,6 +133,7 @@ footer a{color:var(--blue)}
       <div class="corridor"><span class="dot"></span>El Salvador <span class="arr">&rarr;</span> Venezuela <span class="dot"></span> Misión Humanitaria</div>
     </div>
     <div class="status-area">
+      <span class="verbadge" title="Clasifica el estatus por tipo (Cubierto / Base OK / Parcial / Sin proveedor / N/A)">v2 · categorías por tipo</span>
       <span class="pill loading" id="syncPill"><span class="ring"></span><span id="syncText">Conectando…</span></span>
       <button class="btn" id="refreshBtn">Actualizar</button>
     </div>
