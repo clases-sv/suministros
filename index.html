@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misión Humanitaria · Seguimiento de Insumos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13202E; --muted:#5C6B7A; --bg:#EAEEF3; --panel:#FFFFFF;
+  --line:#D8E0E8; --line2:#E7ECF1;
+  --deep:#143C5B; --blue:#1F6FB2;
+  --green:#0F7A4D; --teal:#0E7C86; --amber:#B26A00;
+  --red:#B42318; --reddeep:#7F1D1D; --orange:#C2410C;
+  --shadow:0 1px 2px rgba(19,32,46,.06),0 6px 18px rgba(19,32,46,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.wrap{max-width:1240px; margin:0 auto; padding:0 18px 56px}
+
+/* Header */
+header.top{background:var(--deep); color:#EAF2F9; }
+.top-in{max-width:1240px; margin:0 auto; padding:18px; display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; justify-content:space-between}
+.brand h1{font-family:"Archivo",sans-serif; font-weight:800; font-size:21px; letter-spacing:-.01em; margin:0; line-height:1.15}
+.corridor{display:flex; align-items:center; gap:9px; margin-top:7px; font-family:"Archivo",sans-serif; font-weight:600; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#9FC2DD}
+.corridor .dot{width:6px;height:6px;border-radius:50%;background:#5FA8D6}
+.corridor .arr{color:#5FA8D6;font-weight:700}
+.status-area{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.pill{display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18); color:#EAF2F9; padding:7px 12px; border-radius:999px; font-size:12.5px; font-weight:500}
+.pill .ring{width:9px;height:9px;border-radius:50%;background:#46C08A;box-shadow:0 0 0 3px rgba(70,192,138,.25)}
+.pill.warn .ring{background:#F2B441;box-shadow:0 0 0 3px rgba(242,180,65,.25)}
+.pill.loading .ring{background:#5FA8D6;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.btn{font-family:"Inter",sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#EAF2F9;padding:7px 13px;border-radius:8px}
+.btn:hover{background:rgba(255,255,255,.16)}
+.btn:active{transform:translateY(1px)}
+
+/* Tabs */
+.tabs{display:flex; gap:4px; margin:18px 0 16px; background:var(--panel); padding:5px; border-radius:12px; border:1px solid var(--line); width:max-content; max-width:100%; box-shadow:var(--shadow)}
+.tab{font-family:"Archivo",sans-serif;font-weight:600;font-size:14px;border:0;background:transparent;color:var(--muted);padding:9px 16px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--deep);color:#fff}
+.tab:not([aria-selected="true"]):hover{background:var(--line2);color:var(--ink)}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow);position:relative}
+.card.clickable{cursor:pointer;transition:transform .08s ease, box-shadow .12s ease}
+.card.clickable:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(19,32,46,.10),0 14px 30px rgba(19,32,46,.10)}
+.card.active{outline:2px solid var(--deep);outline-offset:1px}
+.card .k{font-size:12px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:7px;letter-spacing:.01em}
+.card .v{font-family:"Archivo",sans-serif;font-weight:800;font-size:27px;line-height:1.05;margin-top:7px;letter-spacing:-.02em}
+.card .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+.card.alert{border-left-style:dashed;border-left-color:var(--red)}
+.swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+
+/* Toolbar */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search{flex:1 1 240px;min-width:200px;position:relative}
+.search input{width:100%;padding:10px 12px 10px 34px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font:inherit;color:var(--ink)}
+.search input:focus{outline:2px solid var(--blue);outline-offset:-1px;border-color:var(--blue)}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.sel{position:relative}
+.sel select{appearance:none;-webkit-appearance:none;padding:10px 32px 10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font:inherit;color:var(--ink);cursor:pointer;max-width:230px}
+.sel select:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.sel::after{content:"";position:absolute;right:13px;top:50%;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.clear{font:inherit;font-weight:600;font-size:12.5px;color:var(--blue);background:none;border:0;cursor:pointer;padding:8px 6px}
+.clear:hover{text-decoration:underline}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;min-height:1px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 7px 5px 11px;font-size:12px;color:var(--ink);font-weight:500}
+.chip b{font-weight:600}
+.chip button{border:0;background:var(--line2);color:var(--muted);width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:13px;line-height:1;display:grid;place-items:center}
+.chip button:hover{background:#d6dde4;color:var(--ink)}
+
+/* Table */
+.tablecard{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+thead th{position:sticky;top:0;background:#F4F7FA;border-bottom:1px solid var(--line);text-align:left;padding:11px 12px;font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;color:var(--deep);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:#ECF1F6}
+thead th .ind{color:var(--blue);font-size:10px;margin-left:4px}
+thead th.n, td.n{text-align:right}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--line2);vertical-align:top}
+tbody tr:hover{background:#F6F9FB}
+tbody tr:last-child td{border-bottom:0}
+td.muted{color:#9AA7B4}
+.itemcell{font-weight:600;color:var(--ink);max-width:280px}
+.statuspill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid}
+.count{padding:10px 14px;font-size:12px;color:var(--muted);border-top:1px solid var(--line2);background:#FBFCFD}
+.empty{padding:40px 18px;text-align:center;color:var(--muted)}
+.empty b{color:var(--ink);display:block;margin-bottom:4px;font-family:"Archivo",sans-serif}
+footer{margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6}
+footer a{color:var(--blue)}
+.banner{display:none;background:#FFF7E8;border:1px solid #F0D89A;color:#7A5408;border-radius:10px;padding:11px 14px;font-size:12.5px;margin-bottom:14px}
+.banner.show{display:block}
+@media (max-width:640px){
+  .card .v{font-size:23px}
+  .top-in{flex-direction:column}
+  .itemcell{max-width:200px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Seguimiento de Insumos</h1>
+      <div class="corridor"><span class="dot"></span>El Salvador <span class="arr">&rarr;</span> Venezuela <span class="dot"></span> Misión Humanitaria</div>
+    </div>
+    <div class="status-area">
+      <span class="pill loading" id="syncPill"><span class="ring"></span><span id="syncText">Conectando…</span></span>
+      <button class="btn" id="refreshBtn">Actualizar</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="herramientas" aria-selected="true">Estatus Herramientas</button>
+    <button class="tab" role="tab" data-tab="primera" aria-selected="false">Primera necesidad</button>
+  </div>
+
+  <div class="banner" id="banner"></div>
+  <div class="cards" id="cards"></div>
+
+  <div class="toolbar" id="toolbar"></div>
+  <div class="chips" id="chips"></div>
+
+  <div class="tablecard">
+    <div class="scroll"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+    <div class="count" id="count"></div>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const SHEET_ID = "1sqpKTpX71H-bwWLh_jiZVK9NTHfWK5KHXMsRfOXvrw8";
+const REFRESH_MS = 60000;
+const SNAPSHOT = {"generated": "2026-06-25", "herramientas": {"headers": ["#", "Ítem / descripción", "Solicitante", "Cantidad necesaria", "FREUND cantidad", "FREUND estatus vs necesidad", "VIDRI cantidad", "VIDRI estatus vs necesidad", "Mejor proveedor", "ORDEN DE COMPRA SOLICITADA A VIDRÍ", "EPA cantidad", "EPA estatus vs necesidad", "ESTATUS"], "records": [{"#": 1.0, "Ítem / descripción": "Pala punta de corazón", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "CUBRE (100/100)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 30.0, "EPA cantidad": 25.0, "EPA estatus vs necesidad": "PARCIAL (25/100)", "ESTATUS": "30% exceso"}, {"#": 2.0, "Ítem / descripción": "Pala cuadrada (de batea)", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "CUBRE (100/100)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 30.0, "EPA cantidad": 18.0, "EPA estatus vs necesidad": "PARCIAL (18/100)", "ESTATUS": "30% exceso"}, {"#": 3.0, "Ítem / descripción": "Pico / piocha", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "CUBRE (100/100)", "Mejor proveedor": "VIDRI", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 30.0, "EPA cantidad": 50.0, "EPA estatus vs necesidad": "PARCIAL (50/100)", "ESTATUS": "30% exceso"}, {"#": 4.0, "Ítem / descripción": "Barra de uña", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "CUBRE (100/100)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 30.0, "EPA cantidad": 6.0, "EPA estatus vs necesidad": "PARCIAL (6/100)", "ESTATUS": "30% exceso"}, {"#": 5.0, "Ítem / descripción": "Barra lineal 1.5m", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "CUBIERTO"}, {"#": 6.0, "Ítem / descripción": "Mazo / almadana", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "CUBRE (100/100)", "Mejor proveedor": "VIDRI", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 30.0, "EPA cantidad": 11.0, "EPA estatus vs necesidad": "PARCIAL (11/100)", "ESTATUS": "30% exceso"}, {"#": 7.0, "Ítem / descripción": "Carretilla reforzada 90L", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "CUBRE (100/100)", "Mejor proveedor": "Solo Vidri", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 100.0, "EPA cantidad": 13.0, "EPA estatus vs necesidad": "PARCIAL (13/100)", "ESTATUS": "CUBIERTO"}, {"#": 8.0, "Ítem / descripción": "Hojas sierra caladora", "Solicitante": "PC", "Cantidad necesaria": 40.0, "FREUND cantidad": 40.0, "FREUND estatus vs necesidad": "CUBRE (40/40)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "CUBIERTO"}, {"#": 9.0, "Ítem / descripción": "Motosierra batería 14\" 20V", "Solicitante": "PC", "Cantidad necesaria": 5.0, "FREUND cantidad": 5.0, "FREUND estatus vs necesidad": "CUBRE (5/5)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "CUBIERTO"}, {"#": 10.0, "Ítem / descripción": "Mototrozadora HILTI DCH 300-X", "Solicitante": "PC", "Cantidad necesaria": 3.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "FALTA"}, {"#": 11.0, "Ítem / descripción": "Herramienta hidráulica T1", "Solicitante": "PC", "Cantidad necesaria": 3.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "FALTA"}, {"#": 12.0, "Ítem / descripción": "Botiquines tácticos trauma", "Solicitante": "PC", "Cantidad necesaria": 6.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "FALTA"}, {"#": 13.0, "Ítem / descripción": "Casco seguridad estándar", "Solicitante": "CAPRES", "Cantidad necesaria": 200.0, "FREUND cantidad": 400.0, "FREUND estatus vs necesidad": "CUBRE (400/200)", "VIDRI cantidad": 200.0, "VIDRI estatus vs necesidad": "CUBRE (200/200)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 60.0, "EPA cantidad": 40.0, "EPA estatus vs necesidad": "PARCIAL (40/200)", "ESTATUS": "30% exceso"}, {"#": 14.0, "Ítem / descripción": "Ponchos impermeables", "Solicitante": "CAPRES", "Cantidad necesaria": 1000.0, "FREUND cantidad": 200.0, "FREUND estatus vs necesidad": "PARCIAL (200/1000)", "VIDRI cantidad": 1000.0, "VIDRI estatus vs necesidad": "CUBRE (1000/1000)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 1000.0, "EPA cantidad": 100.0, "EPA estatus vs necesidad": "PARCIAL (100/1000)", "ESTATUS": "FALTA 80%"}, {"#": 15.0, "Ítem / descripción": "Guantes de cuero/carnaza", "Solicitante": "CAPRES", "Cantidad necesaria": 10000.0, "FREUND cantidad": 10000.0, "FREUND estatus vs necesidad": "CUBRE (10000/10000)", "VIDRI cantidad": 10000.0, "VIDRI estatus vs necesidad": "CUBRE (10000/10000)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 3000.0, "EPA cantidad": 16.0, "EPA estatus vs necesidad": "PARCIAL (16/10000)", "ESTATUS": "30% exceso"}, {"#": 16.0, "Ítem / descripción": "Guantes anticorte A5", "Solicitante": "CAPRES", "Cantidad necesaria": 10000.0, "FREUND cantidad": 7000.0, "FREUND estatus vs necesidad": "PARCIAL (7000/10000)", "VIDRI cantidad": 10000.0, "VIDRI estatus vs necesidad": "CUBRE (10000/10000)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 3000.0, "EPA cantidad": 146.0, "EPA estatus vs necesidad": "PARCIAL (146/10000)", "ESTATUS": "30% exceso"}, {"#": 17.0, "Ítem / descripción": "Gafas de seguridad", "Solicitante": "CAPRES", "Cantidad necesaria": 1000.0, "FREUND cantidad": 1000.0, "FREUND estatus vs necesidad": "CUBRE (1000/1000)", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "PARCIAL (100/1000)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 300.0, "EPA cantidad": 444.0, "EPA estatus vs necesidad": "PARCIAL (444/1000)", "ESTATUS": "30% exceso"}, {"#": 18.0, "Ítem / descripción": "Mascarilla N95/FFP2", "Solicitante": "CAPRES", "Cantidad necesaria": 10000.0, "FREUND cantidad": 10000.0, "FREUND estatus vs necesidad": "CUBRE (10000/10000)", "VIDRI cantidad": 10000.0, "VIDRI estatus vs necesidad": "CUBRE (10000/10000)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 3000.0, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "30% exceso"}, {"#": 19.0, "Ítem / descripción": "Botas punta de acero", "Solicitante": "CAPRES", "Cantidad necesaria": 250.0, "FREUND cantidad": 250.0, "FREUND estatus vs necesidad": "CUBRE (250/250)", "VIDRI cantidad": 250.0, "VIDRI estatus vs necesidad": "CUBRE (250/250)", "Mejor proveedor": "VIDRI", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 75.0, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "30% exceso"}, {"#": 20.0, "Ítem / descripción": "Chaleco reflectivo", "Solicitante": "CAPRES", "Cantidad necesaria": 1000.0, "FREUND cantidad": 1000.0, "FREUND estatus vs necesidad": "CUBRE (1000/1000)", "VIDRI cantidad": 1000.0, "VIDRI estatus vs necesidad": "CUBRE (1000/1000)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 300.0, "EPA cantidad": 185.0, "EPA estatus vs necesidad": "PARCIAL (185/1000)", "ESTATUS": "30% exceso"}, {"#": 21.0, "Ítem / descripción": "Lámpara de casco / headlamp", "Solicitante": "CAPRES", "Cantidad necesaria": 200.0, "FREUND cantidad": 400.0, "FREUND estatus vs necesidad": "CUBRE (400/200)", "VIDRI cantidad": 200.0, "VIDRI estatus vs necesidad": "CUBRE (200/200)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 200.0, "EPA cantidad": 82.0, "EPA estatus vs necesidad": "PARCIAL (82/200)", "ESTATUS": "FALTA 50%"}, {"#": 22.0, "Ítem / descripción": "Linterna de mano LED", "Solicitante": "CAPRES", "Cantidad necesaria": 500.0, "FREUND cantidad": 500.0, "FREUND estatus vs necesidad": "CUBRE (500/500)", "VIDRI cantidad": 500.0, "VIDRI estatus vs necesidad": "CUBRE (500/500)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 150.0, "EPA cantidad": 333.0, "EPA estatus vs necesidad": "PARCIAL (333/500)", "ESTATUS": "30% exceso"}, {"#": 23.0, "Ítem / descripción": "Reflector LED portátil", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 50.0, "FREUND estatus vs necesidad": "PARCIAL (50/100)", "VIDRI cantidad": 50.0, "VIDRI estatus vs necesidad": "PARCIAL (50/100)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 30.0, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "30% exceso"}, {"#": 24.0, "Ítem / descripción": "Torre de luz portátil LED", "Solicitante": "CAPRES", "Cantidad necesaria": 50.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": 50.0, "VIDRI estatus vs necesidad": "CUBRE (50/50)", "Mejor proveedor": "Solo Vidri", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 50.0, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "CUBIERTO"}, {"#": 25.0, "Ítem / descripción": "Baterías AAA", "Solicitante": "CAPRES", "Cantidad necesaria": 1000.0, "FREUND cantidad": 1002.0, "FREUND estatus vs necesidad": "CUBRE (1002/1000)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 170.0, "EPA estatus vs necesidad": "PARCIAL (170/1000)", "ESTATUS": "CUBIERTO"}, {"#": 26.0, "Ítem / descripción": "Baterías AA", "Solicitante": null, "Cantidad necesaria": 1000.0, "FREUND cantidad": 1002.0, "FREUND estatus vs necesidad": "CUBRE (1002/1000)", "VIDRI cantidad": 167.0, "VIDRI estatus vs necesidad": "PARCIAL (167/1000)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 51.0, "EPA cantidad": 170.0, "EPA estatus vs necesidad": "PARCIAL (170/1000)", "ESTATUS": "CUBIERTO"}, {"#": 27.0, "Ítem / descripción": "Planta 2-3 kVA gasolina", "Solicitante": "CAPRES", "Cantidad necesaria": 20.0, "FREUND cantidad": 20.0, "FREUND estatus vs necesidad": "CUBRE (20/20)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 7.0, "EPA estatus vs necesidad": "PARCIAL (7/20)", "ESTATUS": "CUBIERTO"}, {"#": 28.0, "Ítem / descripción": "Planta 5-7 kVA gasolina", "Solicitante": "CAPRES", "Cantidad necesaria": 20.0, "FREUND cantidad": 20.0, "FREUND estatus vs necesidad": "CUBRE (20/20)", "VIDRI cantidad": 20.0, "VIDRI estatus vs necesidad": "CUBRE (20/20)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 6.0, "EPA cantidad": 7.0, "EPA estatus vs necesidad": "PARCIAL (7/20)", "ESTATUS": "30% exceso"}, {"#": 29.0, "Ítem / descripción": "Planta 6-9 kVA (alternativa)", "Solicitante": null, "Cantidad necesaria": "—", "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": 20.0, "VIDRI estatus vs necesidad": "N/A", "Mejor proveedor": "Solo Vidri", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "N/A", "EPA estatus vs necesidad": "N/A", "ESTATUS": "CUBIERTO"}, {"#": 30.0, "Ítem / descripción": "Estación energía portátil", "Solicitante": "CAPRES", "Cantidad necesaria": 20.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": 20.0, "VIDRI estatus vs necesidad": "CUBRE (20/20)", "Mejor proveedor": "Solo Vidri", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 20.0, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "CUBIERTO"}, {"#": 31.0, "Ítem / descripción": "Bidones combustible 5 gal", "Solicitante": "CAPRES", "Cantidad necesaria": 50.0, "FREUND cantidad": 50.0, "FREUND estatus vs necesidad": "CUBRE (50/50)", "VIDRI cantidad": 50.0, "VIDRI estatus vs necesidad": "CUBRE (50/50)", "Mejor proveedor": "FREUND", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 15.0, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "30% exceso"}, {"#": 32.0, "Ítem / descripción": "Extensiones eléctricas", "Solicitante": "CAPRES", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": 100.0, "VIDRI estatus vs necesidad": "CUBRE (100/100)", "Mejor proveedor": "Solo Vidri", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": 30.0, "EPA cantidad": 43.0, "EPA estatus vs necesidad": "PARCIAL (43/100)", "ESTATUS": "30% exceso"}, {"#": 33.0, "Ítem / descripción": "Regletas / multicontactos", "Solicitante": "Prensa", "Cantidad necesaria": 100.0, "FREUND cantidad": 100.0, "FREUND estatus vs necesidad": "CUBRE (100/100)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 40.0, "EPA estatus vs necesidad": "PARCIAL (40/100)", "ESTATUS": "FALTA"}, {"#": 34.0, "Ítem / descripción": "Mesas plegables", "Solicitante": "PC", "Cantidad necesaria": 30.0, "FREUND cantidad": 30.0, "FREUND estatus vs necesidad": "CUBRE (30/30)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "FALTA"}, {"#": 35.0, "Ítem / descripción": "Sillas plegables", "Solicitante": "PC", "Cantidad necesaria": 80.0, "FREUND cantidad": 80.0, "FREUND estatus vs necesidad": "CUBRE (80/80)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 40.0, "EPA estatus vs necesidad": "PARCIAL (40/80)", "ESTATUS": "FALTA"}, {"#": 36.0, "Ítem / descripción": "Toldos 3m×3m c/estructura", "Solicitante": "Prensa", "Cantidad necesaria": 20.0, "FREUND cantidad": 20.0, "FREUND estatus vs necesidad": "CUBRE (20/20)", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Solo Freund", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 10.0, "EPA estatus vs necesidad": "PARCIAL (10/20)", "ESTATUS": "FALTA"}, {"#": 37.0, "Ítem / descripción": "Carretilla (ver herr.)", "Solicitante": null, "Cantidad necesaria": "—", "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "N/A", "EPA estatus vs necesidad": "N/A", "ESTATUS": "FALTA"}, {"#": 38.0, "Ítem / descripción": "Sleeping bags", "Solicitante": "PC", "Cantidad necesaria": 200.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 36.0, "EPA estatus vs necesidad": "PARCIAL (36/200)", "ESTATUS": "FALTA"}, {"#": 39.0, "Ítem / descripción": "Catres de campaña", "Solicitante": "PC", "Cantidad necesaria": 75.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": "—", "EPA estatus vs necesidad": "SIN COTIZACIÓN", "ESTATUS": "FALTA"}, {"#": 40.0, "Ítem / descripción": "Cajas transporte equipo", "Solicitante": "PC", "Cantidad necesaria": 200.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 53.0, "EPA estatus vs necesidad": "PARCIAL (53/200)", "ESTATUS": "FALTA"}, {"#": 41.0, "Ítem / descripción": "Repelente zancudos crema", "Solicitante": "PC", "Cantidad necesaria": 75.0, "FREUND cantidad": "—", "FREUND estatus vs necesidad": "SIN COTIZACIÓN", "VIDRI cantidad": "—", "VIDRI estatus vs necesidad": "SIN COTIZACIÓN", "Mejor proveedor": "Ninguno", "ORDEN DE COMPRA SOLICITADA A VIDRÍ": null, "EPA cantidad": 36.0, "EPA estatus vs necesidad": "PARCIAL (36/75)", "ESTATUS": "FALTA"}]}, "primera": {"headers": ["Responsable", "Categoría", "Artículo", "Unidad de referencia", "¿Batería / pila?", "¿Hidrocarburo / inflamable?", "Tamaño / volumen", "Peso unitario aprox. (kg)", "Clasificación de transporte", "Cantidad", "Proveedor", "Peso total estimado (kg)", "Observaciones", "Estatus"], "records": [{"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Agua potable", "Unidad de referencia": "Fardo (24 x 600 ml)", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Mediano", "Peso unitario aprox. (kg)": 15.0, "Clasificación de transporte": "NORMAL", "Cantidad": 130.0, "Proveedor": null, "Peso total estimado (kg)": 1950, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Pastillas / filtro potabilizador", "Unidad de referencia": "Frasco o caja", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.1, "Clasificación de transporte": "NORMAL", "Cantidad": 2700.0, "Proveedor": null, "Peso total estimado (kg)": 270, "Observaciones": "Prioridad: agua segura.", "Estatus": "Pendiente"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Atún", "Unidad de referencia": "Lata 142 g", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.142, "Clasificación de transporte": "NORMAL", "Cantidad": 14600.0, "Proveedor": null, "Peso total estimado (kg)": 2073.2, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Barras de proteína", "Unidad de referencia": "Unidad (~60 g)", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.06, "Clasificación de transporte": "NORMAL", "Cantidad": 18400.0, "Proveedor": null, "Peso total estimado (kg)": 1104, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Barras de cereal", "Unidad de referencia": "Unidad (~30 g)", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.03, "Clasificación de transporte": "NORMAL", "Cantidad": 19000.0, "Proveedor": null, "Peso total estimado (kg)": 570, "Observaciones": null, "Estatus": "Pendiente"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Barras energéticas / galletas", "Unidad de referencia": "Paquete", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.3, "Clasificación de transporte": "NORMAL", "Cantidad": 5170.0, "Proveedor": null, "Peso total estimado (kg)": 1551, "Observaciones": null, "Estatus": "Pendiente"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Leche en polvo o UHT", "Unidad de referencia": "Bolsa / lata", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.4, "Clasificación de transporte": "NORMAL", "Cantidad": 4200.0, "Proveedor": null, "Peso total estimado (kg)": 1680, "Observaciones": "Prioridad.", "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Fórmula infantil", "Unidad de referencia": "Lata", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.4, "Clasificación de transporte": "NORMAL", "Cantidad": 1100.0, "Proveedor": null, "Peso total estimado (kg)": 440, "Observaciones": "Prioridad.", "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Agua y alimentos", "Artículo": "Papillas para bebé", "Unidad de referencia": "Frasco / pouch", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.15, "Clasificación de transporte": "NORMAL", "Cantidad": 1600.0, "Proveedor": null, "Peso total estimado (kg)": 240, "Observaciones": null, "Estatus": "Pendiente"}, {"Responsable": "Abraham", "Categoría": "Higiene y saneamiento", "Artículo": "Jabón de baño", "Unidad de referencia": "Barra", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.12, "Clasificación de transporte": "NORMAL", "Cantidad": 4300.0, "Proveedor": null, "Peso total estimado (kg)": 516, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Higiene y saneamiento", "Artículo": "Pasta dental", "Unidad de referencia": "Tubo", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.1, "Clasificación de transporte": "NORMAL", "Cantidad": 2700.0, "Proveedor": null, "Peso total estimado (kg)": 270, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Higiene y saneamiento", "Artículo": "Cepillos de dientes", "Unidad de referencia": "Unidad", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.02, "Clasificación de transporte": "NORMAL", "Cantidad": 5400.0, "Proveedor": null, "Peso total estimado (kg)": 108, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Higiene y saneamiento", "Artículo": "Toallas sanitarias / tampones", "Unidad de referencia": "Paquete", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.2, "Clasificación de transporte": "NORMAL", "Cantidad": 2700.0, "Proveedor": null, "Peso total estimado (kg)": 540, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Higiene y saneamiento", "Artículo": "Pañales de bebé", "Unidad de referencia": "Paquete", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Voluminoso", "Peso unitario aprox. (kg)": 1.5, "Clasificación de transporte": "NORMAL", "Cantidad": 400.0, "Proveedor": null, "Peso total estimado (kg)": 600, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Higiene y saneamiento", "Artículo": "Toallitas húmedas", "Unidad de referencia": "Paquete", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.3, "Clasificación de transporte": "NORMAL", "Cantidad": 1600.0, "Proveedor": null, "Peso total estimado (kg)": 480, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Higiene y saneamiento", "Artículo": "Bolsas para basura", "Unidad de referencia": "Rollo / paquete", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.5, "Clasificación de transporte": "NORMAL", "Cantidad": 800.0, "Proveedor": null, "Peso total estimado (kg)": 400, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Abrigo y descanso", "Artículo": "Cobijas / frazadas", "Unidad de referencia": "Unidad", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Voluminoso", "Peso unitario aprox. (kg)": 1.2, "Clasificación de transporte": "NORMAL", "Cantidad": 600.0, "Proveedor": null, "Peso total estimado (kg)": 720, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Abrigo y descanso", "Artículo": "Colchonetas", "Unidad de referencia": "Unidad", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Voluminoso", "Peso unitario aprox. (kg)": 1.5, "Clasificación de transporte": "NORMAL", "Cantidad": 300.0, "Proveedor": null, "Peso total estimado (kg)": 450, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Abrigo y descanso", "Artículo": "Carpas / tiendas", "Unidad de referencia": "Unidad", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Voluminoso", "Peso unitario aprox. (kg)": 5.0, "Clasificación de transporte": "NORMAL", "Cantidad": 60.0, "Proveedor": null, "Peso total estimado (kg)": 300, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Abrigo y descanso", "Artículo": "Lonas / plásticos impermeables", "Unidad de referencia": "Unidad", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Mediano", "Peso unitario aprox. (kg)": 2.0, "Clasificación de transporte": "NORMAL", "Cantidad": 140.0, "Proveedor": null, "Peso total estimado (kg)": 280, "Observaciones": null, "Estatus": "Pendiente"}, {"Responsable": "Abraham", "Categoría": "Bebés, niños y adultos mayores", "Artículo": "Biberones", "Unidad de referencia": "Unidad", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.1, "Clasificación de transporte": "NORMAL", "Cantidad": 600.0, "Proveedor": null, "Peso total estimado (kg)": 60, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Bebés, niños y adultos mayores", "Artículo": "Crema antipañalitis", "Unidad de referencia": "Tubo", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Pequeño", "Peso unitario aprox. (kg)": 0.1, "Clasificación de transporte": "NORMAL", "Cantidad": 600.0, "Proveedor": null, "Peso total estimado (kg)": 60, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Bebés, niños y adultos mayores", "Artículo": "Pañales de adulto / incontinencia", "Unidad de referencia": "Paquete", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Voluminoso", "Peso unitario aprox. (kg)": 1.5, "Clasificación de transporte": "NORMAL", "Cantidad": 160.0, "Proveedor": null, "Peso total estimado (kg)": 240, "Observaciones": null, "Estatus": "Despacho"}, {"Responsable": "Abraham", "Categoría": "Bebés, niños y adultos mayores", "Artículo": "Bastones / muletas", "Unidad de referencia": "Unidad", "¿Batería / pila?": "No", "¿Hidrocarburo / inflamable?": "No", "Tamaño / volumen": "Mediano", "Peso unitario aprox. (kg)": 0.8, "Clasificación de transporte": "NORMAL", "Cantidad": 120.0, "Proveedor": null, "Peso total estimado (kg)": 96, "Observaciones": null, "Estatus": "Despacho"}]}};
+
+const STATUS_COLORS = {
+  // Estatus Herramientas (5 valores)
+  "CUBIERTO":   "#0F7A4D",
+  "30% exceso": "#0E7C86",
+  "FALTA":      "#B42318",
+  "FALTA 50%":  "#C2410C",
+  "FALTA 80%":  "#7F1D1D",
+  // Primera necesidad
+  "Despacho":   "#0F7A4D",
+  "Pendiente":  "#B26A00"
+};
+
+const TABS = {
+  herramientas: {
+    label: "Estatus Herramientas",
+    sheetName: "Estatus Herramientas",
+    keyField: "Ítem / descripción",
+    headerMarkers: ["solicitante","estatus"],
+    statusField: "ESTATUS",
+    numericFields: ["Cantidad necesaria","FREUND cantidad","VIDRI cantidad","ORDEN DE COMPRA SOLICITADA A VIDRÍ","EPA cantidad"],
+    itemField: "Ítem / descripción",
+    searchFields: ["Ítem / descripción","Solicitante"],
+    dropdowns: [
+      {field:"Solicitante", label:"Solicitante"},
+      {field:"Mejor proveedor", label:"Mejor proveedor"},
+      {field:"ESTATUS", label:"Estatus"}
+    ],
+    statusOrder: ["CUBIERTO","30% exceso","FALTA","FALTA 50%","FALTA 80%"]
+  },
+  primera: {
+    label: "Primera necesidad",
+    sheetName: "Primera necesidad",
+    keyField: "Artículo",
+    headerMarkers: ["responsable","categoría"],
+    statusField: "Estatus",
+    numericFields: ["Peso unitario aprox. (kg)","Cantidad","Peso total estimado (kg)"],
+    itemField: "Artículo",
+    searchFields: ["Artículo","Categoría","Observaciones"],
+    dropdowns: [
+      {field:"Categoría", label:"Categoría"},
+      {field:"Clasificación de transporte", label:"Transporte"},
+      {field:"Estatus", label:"Estatus"}
+    ]
+  }
+};
+
+let DATA = { herramientas:null, primera:null };
+let META = { herramientas:{live:false,time:null}, primera:{live:false,time:null} };
+let current = "herramientas";
+let filters = {}; // {field:value}
+let search = "";
+let sortState = { field:null, dir:1 };
+
+// ---------- helpers ----------
+const norm = s => String(s==null?"":s).replace(/\s+/g," ").trim().toLowerCase();
+const isBlank = v => v==null || v==="" || v==="—" || String(v).trim()==="";
+function toNum(v){
+  if(isBlank(v)) return null;
+  const n = parseFloat(String(v).replace(/,/g,"").replace(/[^0-9.\-]/g,""));
+  return isNaN(n)?null:n;
+}
+function fmt(n){ return n==null?"":n.toLocaleString("es-SV",{maximumFractionDigits:1}); }
+
+// RFC4180-ish CSV parser -> array of rows
+function parseCSV(text){
+  const rows=[]; let row=[], val="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){val+='"';i++;} else q=false; }
+      else val+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===','){ row.push(val); val=""; }
+      else if(c==='\n'){ row.push(val); rows.push(row); row=[]; val=""; }
+      else if(c==='\r'){ /* skip */ }
+      else val+=c;
+    }
+  }
+  if(val!==""||row.length){ row.push(val); rows.push(row); }
+  return rows;
+}
+
+// Map a raw CSV grid into {headers, records} using the tab's canonical headers
+function gridToRecords(grid, cfg, canonHeaders){
+  // find header row by markers
+  let hIdx=-1;
+  for(let r=0;r<grid.length;r++){
+    const cells = grid[r].map(norm);
+    if(cfg.headerMarkers.every(m=>cells.some(c=>c.includes(m)))){ hIdx=r; break; }
+  }
+  if(hIdx<0) throw new Error("No se encontró la fila de encabezados");
+  const rawHead = grid[hIdx].map(norm);
+  // build column index for each canonical header
+  const colOf = {};
+  canonHeaders.forEach(h=>{
+    const nh = norm(h);
+    let j = rawHead.indexOf(nh);
+    if(j<0) j = rawHead.findIndex(c=>c && (c.includes(nh)||nh.includes(c)));
+    colOf[h]=j;
+  });
+  const recs=[];
+  for(let r=hIdx+1;r<grid.length;r++){
+    const cells = grid[r];
+    const joined = norm(cells.join(" "));
+    if(joined.includes("totales") || joined.includes("resumen por")) break;
+    const o={};
+    canonHeaders.forEach(h=>{ const j=colOf[h]; o[h]= (j>=0 && j<cells.length)? cells[j] : ""; });
+    if(isBlank(o[cfg.keyField])) continue;
+    recs.push(o);
+  }
+  return { headers:canonHeaders, records:recs };
+}
+
+async function fetchTab(key){
+  const cfg = TABS[key];
+  const url = "https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:csv&sheet="+encodeURIComponent(cfg.sheetName)+"&t="+Date.now();
+  const res = await fetch(url, {cache:"no-store"});
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const text = await res.text();
+  if(/<html|google\.visualization|requires sign|accounts\.google/i.test(text.slice(0,400)))
+    throw new Error("El Sheet no es público");
+  const grid = parseCSV(text);
+  const canon = SNAPSHOT[key].headers; // canonical column order from snapshot
+  return gridToRecords(grid, cfg, canon);
+}
+
+async function refresh(manual){
+  setSync("loading","Actualizando…");
+  let okCount=0, failNote="";
+  await Promise.all(Object.keys(TABS).map(async key=>{
+    try{
+      const r = await fetchTab(key);
+      DATA[key]=r; META[key]={live:true,time:new Date()};
+      okCount++;
+    }catch(e){
+      failNote = e.message || "error";
+      if(!DATA[key]){ DATA[key]=SNAPSHOT[key]; META[key]={live:false,time:null}; }
+    }
+  }));
+  if(okCount===Object.keys(TABS).length){
+    setSync("ok","En vivo · "+timeStr(new Date()));
+    hideBanner();
+  } else if(okCount>0){
+    setSync("warn","Parcial · "+timeStr(new Date()));
+    showBanner("Algunas pestañas no se pudieron leer en vivo ("+failNote+"). Se muestran los últimos datos disponibles.");
+  } else {
+    setSync("warn","Respaldo · "+SNAPSHOT.generated);
+    showBanner("No se pudo leer el Sheet en vivo ("+failNote+"). Mostrando el respaldo del "+SNAPSHOT.generated+". Verifica que el documento esté compartido como «Cualquier persona con el enlace: Lector».");
+  }
+  render();
+}
+
+function timeStr(d){ return d.toLocaleTimeString("es-SV",{hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
+function setSync(state,txt){
+  const p=document.getElementById("syncPill");
+  p.className="pill "+(state==="ok"?"":state);
+  document.getElementById("syncText").textContent=txt;
+}
+function showBanner(m){ const b=document.getElementById("banner"); b.textContent=m; b.classList.add("show"); }
+function hideBanner(){ document.getElementById("banner").classList.remove("show"); }
+
+// ---------- filtering ----------
+function activeRecords(){
+  const cfg=TABS[current]; const recs=(DATA[current]||SNAPSHOT[current]).records;
+  let out = recs.filter(r=>{
+    for(const f in filters){ if(filters[f]!=null && String(r[f]).trim()!==filters[f]) return false; }
+    if(search){
+      const q=norm(search);
+      const hit = cfg.searchFields.some(f=>norm(r[f]).includes(q));
+      if(!hit) return false;
+    }
+    return true;
+  });
+  if(sortState.field){
+    const f=sortState.field, numeric=cfg.numericFields.includes(f);
+    out=out.slice().sort((a,b)=>{
+      let x=a[f],y=b[f];
+      if(numeric){ x=toNum(x)??-Infinity; y=toNum(y)??-Infinity; return (x-y)*sortState.dir; }
+      return String(x).localeCompare(String(y),"es")*sortState.dir;
+    });
+  }
+  return out;
+}
+
+// ---------- rendering ----------
+function render(){ renderCards(); renderToolbar(); renderChips(); renderTable(); renderFooter(); }
+
+function countBy(recs, field, value){ return recs.filter(r=>String(r[field]).trim()===value).length; }
+function sumBy(recs, field){ return recs.reduce((s,r)=>s+(toNum(r[field])||0),0); }
+
+function renderCards(){
+  const el=document.getElementById("cards"); el.innerHTML="";
+  const all=(DATA[current]||SNAPSHOT[current]).records;
+  const cards=[];
+  if(current==="herramientas"){
+    cards.push({k:"Ítems totales", v:all.length, sub:"en seguimiento", color:"#1F6FB2", filter:null});
+    TABS.herramientas.statusOrder.forEach(s=>{
+      cards.push({k:s, v:countBy(all,"ESTATUS",s), sub:"", color:STATUS_COLORS[s], swatch:true, filter:{field:"ESTATUS",value:s}});
+    });
+    cards.push({k:"Sin proveedor", v:countBy(all,"Mejor proveedor","Ninguno"), sub:"ningún cotizante", color:"#B42318", alert:true, filter:{field:"Mejor proveedor",value:"Ninguno"}});
+  } else {
+    cards.push({k:"Artículos", v:all.length, sub:"en la lista", color:"#1F6FB2", filter:null});
+    cards.push({k:"Unidades totales", v:fmt(sumBy(all,"Cantidad")), sub:"suma de cantidades", color:"#143C5B", stat:true});
+    cards.push({k:"Peso estimado", v:fmt(sumBy(all,"Peso total estimado (kg)"))+" kg", sub:"≈ "+(sumBy(all,"Peso total estimado (kg)")/1000).toFixed(1)+" t", color:"#143C5B", stat:true});
+    cards.push({k:"En despacho", v:countBy(all,"Estatus","Despacho"), sub:"", color:STATUS_COLORS["Despacho"], swatch:true, filter:{field:"Estatus",value:"Despacho"}});
+    cards.push({k:"Pendiente", v:countBy(all,"Estatus","Pendiente"), sub:"", color:STATUS_COLORS["Pendiente"], swatch:true, filter:{field:"Estatus",value:"Pendiente"}});
+  }
+  cards.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="card"+(c.filter?" clickable":"")+(c.alert?" alert":"");
+    d.style.borderLeftColor=c.color;
+    const isActive = c.filter && filters[c.filter.field]===c.filter.value;
+    const isTotalActive = c.filter===null && Object.keys(filters).length===0 && !c.stat && current==="herramientas" && c.k==="Ítems totales";
+    if(isActive) d.classList.add("active");
+    const sw = c.swatch?'<span class="swatch" style="background:'+c.color+'"></span>':"";
+    d.innerHTML='<div class="k">'+sw+c.k+'</div><div class="v num">'+c.v+'</div>'+(c.sub?'<div class="sub">'+c.sub+'</div>':"");
+    if(c.filter){
+      d.onclick=()=>{
+        if(filters[c.filter.field]===c.filter.value) delete filters[c.filter.field];
+        else filters[c.filter.field]=c.filter.value;
+        render();
+      };
+    } else if(c.filter===null && !c.stat){
+      d.classList.add("clickable");
+      d.onclick=()=>{ filters={}; search=""; render(); };
+    }
+    el.appendChild(d);
+  });
+}
+
+function uniqueVals(recs, field){
+  const set=new Set();
+  recs.forEach(r=>{ const v=String(r[field]).trim(); if(v&&v!=="—"&&v!=="None") set.add(v); });
+  return [...set].sort((a,b)=>a.localeCompare(b,"es"));
+}
+
+function renderToolbar(){
+  const cfg=TABS[current], all=(DATA[current]||SNAPSHOT[current]).records;
+  const tb=document.getElementById("toolbar"); tb.innerHTML="";
+  const s=document.createElement("div"); s.className="search";
+  s.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+  const inp=document.createElement("input");
+  inp.type="search"; inp.placeholder="Buscar "+cfg.itemField.toLowerCase()+"…"; inp.value=search;
+  inp.oninput=e=>{ search=e.target.value; renderChips(); renderTable(); };
+  s.appendChild(inp); tb.appendChild(s);
+  cfg.dropdowns.forEach(dd=>{
+    const w=document.createElement("div"); w.className="sel";
+    const sel=document.createElement("select");
+    const opts=uniqueVals(all,dd.field);
+    sel.innerHTML='<option value="">'+dd.label+': todos</option>'+opts.map(o=>'<option'+(filters[dd.field]===o?" selected":"")+'>'+o+'</option>').join("");
+    sel.onchange=e=>{ const v=e.target.value; if(v) filters[dd.field]=v; else delete filters[dd.field]; render(); };
+    w.appendChild(sel); tb.appendChild(w);
+  });
+  const c=document.createElement("button"); c.className="clear"; c.textContent="Limpiar filtros";
+  c.onclick=()=>{ filters={}; search=""; sortState={field:null,dir:1}; render(); };
+  tb.appendChild(c);
+}
+
+function renderChips(){
+  const el=document.getElementById("chips"); el.innerHTML="";
+  Object.keys(filters).forEach(f=>{
+    const chip=document.createElement("span"); chip.className="chip";
+    chip.innerHTML='<span>'+f+': <b>'+filters[f]+'</b></span>';
+    const x=document.createElement("button"); x.textContent="×"; x.title="Quitar";
+    x.onclick=()=>{ delete filters[f]; render(); };
+    chip.appendChild(x); el.appendChild(chip);
+  });
+  if(search){
+    const chip=document.createElement("span"); chip.className="chip";
+    chip.innerHTML='<span>Buscar: <b>'+search+'</b></span>';
+    const x=document.createElement("button"); x.textContent="×";
+    x.onclick=()=>{ search=""; renderToolbar(); render(); };
+    chip.appendChild(x); el.appendChild(chip);
+  }
+}
+
+function renderTable(){
+  const cfg=TABS[current];
+  const headers=(DATA[current]||SNAPSHOT[current]).headers;
+  const recs=activeRecords();
+  const thead=document.getElementById("thead"); const tbody=document.getElementById("tbody");
+  thead.innerHTML=""; tbody.innerHTML="";
+  const tr=document.createElement("tr");
+  headers.forEach(h=>{
+    const th=document.createElement("th");
+    if(cfg.numericFields.includes(h)) th.className="n";
+    let ind=""; if(sortState.field===h) ind='<span class="ind">'+(sortState.dir>0?"▲":"▼")+'</span>';
+    th.innerHTML=h+ind;
+    th.onclick=()=>{ if(sortState.field===h) sortState.dir*=-1; else {sortState.field=h;sortState.dir=1;} render(); };
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+  if(recs.length===0){
+    tbody.innerHTML='<tr><td colspan="'+headers.length+'"><div class="empty"><b>Sin resultados</b>Ajusta la búsqueda o quita filtros para ver más ítems.</div></td></tr>';
+  } else {
+    recs.forEach(r=>{
+      const row=document.createElement("tr");
+      headers.forEach(h=>{
+        const td=document.createElement("td");
+        const val=r[h];
+        if(h===cfg.statusField && !isBlank(val)){
+          const col=STATUS_COLORS[String(val).trim()]||"#5C6B7A";
+          td.innerHTML='<span class="statuspill" style="color:'+col+';border-color:'+col+'33;background:'+col+'12"><span class="swatch" style="background:'+col+'"></span>'+val+'</span>';
+        } else if(isBlank(val)){
+          td.className="muted"; td.textContent="—";
+        } else if(cfg.numericFields.includes(h)){
+          td.className="n num"; const n=toNum(val); td.textContent = n==null? val : fmt(n);
+        } else if(h===cfg.itemField){
+          td.className="itemcell"; td.textContent=val;
+        } else {
+          td.textContent=val;
+        }
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+  }
+  const total=(DATA[current]||SNAPSHOT[current]).records.length;
+  document.getElementById("count").textContent="Mostrando "+recs.length+" de "+total+" ítems";
+}
+
+function renderFooter(){
+  const m=META[current];
+  const src = m.live ? ("Datos en vivo · última lectura "+(m.time?timeStr(m.time):"")) : ("Respaldo del "+SNAPSHOT.generated+" (lectura en vivo no disponible)");
+  document.getElementById("footer").innerHTML =
+    src+" · Auto-actualiza cada "+(REFRESH_MS/1000)+" s. "+
+    '<a href="https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit" target="_blank" rel="noopener">Abrir Sheet</a>';
+}
+
+// ---------- events ----------
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected","false"));
+    t.setAttribute("aria-selected","true");
+    current=t.dataset.tab; filters={}; search=""; sortState={field:null,dir:1};
+    render();
+  };
+});
+document.getElementById("refreshBtn").onclick=()=>refresh(true);
+
+// init: render snapshot instantly, then go live
+DATA.herramientas=SNAPSHOT.herramientas; DATA.primera=SNAPSHOT.primera;
+render();
+refresh(false);
+setInterval(()=>refresh(false), REFRESH_MS);
+</script>
+</body>
+</html>
