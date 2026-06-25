@@ -133,7 +133,7 @@ footer a{color:var(--blue)}
       <div class="corridor"><span class="dot"></span>El Salvador <span class="arr">&rarr;</span> Venezuela <span class="dot"></span> Misión Humanitaria</div>
     </div>
     <div class="status-area">
-      <span class="verbadge" title="4 pestañas · estatus por tipo en Herramientas">v3 · 4 pestañas</span>
+      <span class="verbadge" title="4 pestañas · estatus por tipo en Herramientas">v4 · proveedor</span>
       <span class="pill loading" id="syncPill"><span class="ring"></span><span id="syncText">Conectando…</span></span>
       <button class="btn" id="refreshBtn">Actualizar</button>
     </div>
@@ -211,10 +211,16 @@ const TABS = {
     statusField: "Estatus",
     numericFields: ["Peso unitario aprox. (kg)","Cantidad","Peso total estimado (kg)","Cant. Walmart","Cant. PriceSmart","Cant. Selectos","Cantidad Pendiente"],
     itemField: "Artículo",
-    searchFields: ["Artículo","Categoría","Observaciones"],
+    searchFields: ["Artículo","Categoría","Observaciones","Proveedor"],
+    computed: [{ name:"Proveedor", after:"Cant. Selectos", compute:(r)=>{
+      const m=[["Walmart","Cant. Walmart"],["PriceSmart","Cant. PriceSmart"],["Selectos","Cant. Selectos"]];
+      return m.filter(x=>(toNum(r[x[1]])||0)>0).map(x=>x[0]).join(" · ");
+    }}],
+    includeMatch: ["Proveedor"],
     dropdowns: [
       {field:"Categoría", label:"Categoría"},
-      {field:"Clasificación de transporte", label:"Transporte"}
+      {field:"Clasificación de transporte", label:"Transporte"},
+      {field:"Proveedor", label:"Proveedor", options:["Walmart","PriceSmart","Selectos","(sin asignar)"]}
     ]
   },
   medreq: {
@@ -265,6 +271,22 @@ function toNum(v){
   return isNaN(n)?null:n;
 }
 function fmt(n){ return n==null?"":n.toLocaleString("es-SV",{maximumFractionDigits:1}); }
+function prepData(key, block){
+  const cfg=TABS[key];
+  if(!cfg || !cfg.computed) return block;
+  const headers=block.headers.slice();
+  cfg.computed.forEach(c=>{
+    if(headers.includes(c.name)) return;
+    const at = c.after && headers.includes(c.after) ? headers.indexOf(c.after)+1 : headers.length;
+    headers.splice(at,0,c.name);
+  });
+  const records=block.records.map(r=>{
+    const o=Object.assign({}, r);
+    cfg.computed.forEach(c=>{ o[c.name]=c.compute(o); });
+    return o;
+  });
+  return {headers, records};
+}
 
 // RFC4180-ish CSV parser -> array of rows
 function parseCSV(text){
@@ -336,11 +358,11 @@ async function refresh(manual){
   await Promise.all(Object.keys(TABS).map(async key=>{
     try{
       const r = await fetchTab(key);
-      DATA[key]=r; META[key]={live:true,time:new Date()};
+      DATA[key]=prepData(key, r); META[key]={live:true,time:new Date()};
       okCount++;
     }catch(e){
       failNote = e.message || "error";
-      if(!DATA[key]){ DATA[key]=SNAPSHOT[key]; META[key]={live:false,time:null}; }
+      if(!DATA[key]){ DATA[key]=prepData(key, SNAPSHOT[key]); META[key]={live:false,time:null}; }
     }
   }));
   if(okCount===Object.keys(TABS).length){
@@ -369,7 +391,13 @@ function hideBanner(){ document.getElementById("banner").classList.remove("show"
 function activeRecords(){
   const cfg=TABS[current]; const recs=(DATA[current]||SNAPSHOT[current]).records;
   let out = recs.filter(r=>{
-    for(const f in filters){ if(filters[f]!=null && String(r[f]).trim()!==filters[f]) return false; }
+    for(const f in filters){
+      const fv=filters[f]; if(fv==null) continue;
+      const rv=String(r[f]==null?"":r[f]).trim();
+      if(fv==="(sin asignar)"){ if(rv!=="") return false; }
+      else if(cfg.includeMatch && cfg.includeMatch.includes(f)){ if(!rv.includes(fv)) return false; }
+      else if(rv!==fv) return false;
+    }
     if(statusSet.size>0 && !statusSet.has(catFor(cfg, r[cfg.statusField]))) return false;
     if(search){
       const q=norm(search);
@@ -506,7 +534,7 @@ function renderToolbar(){
   cfg.dropdowns.forEach(dd=>{
     const w=document.createElement("div"); w.className="sel";
     const sel=document.createElement("select");
-    const opts=uniqueVals(all,dd.field,dd.include);
+    const opts=dd.options ? dd.options : uniqueVals(all,dd.field,dd.include);
     sel.innerHTML='<option value="">'+dd.label+': todos</option>'+opts.map(o=>'<option'+(filters[dd.field]===o?" selected":"")+'>'+o+'</option>').join("");
     sel.onchange=e=>{ const v=e.target.value; if(v) filters[dd.field]=v; else delete filters[dd.field]; render(); };
     w.appendChild(sel); tb.appendChild(w);
@@ -610,7 +638,7 @@ document.querySelectorAll(".tab").forEach(t=>{
 document.getElementById("refreshBtn").onclick=()=>refresh(true);
 
 // init: render snapshot instantly, then go live
-Object.keys(TABS).forEach(k=>{ DATA[k]=SNAPSHOT[k]; META[k]={live:false,time:null}; });
+Object.keys(TABS).forEach(k=>{ DATA[k]=prepData(k, SNAPSHOT[k]); META[k]={live:false,time:null}; });
 render();
 refresh(false);
 setInterval(()=>refresh(false), REFRESH_MS);
